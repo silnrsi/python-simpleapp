@@ -1,0 +1,84 @@
+#!/usr/bin/python3
+
+import os, argparse, regex, sys
+import logging
+from gooey import Gooey
+
+try:
+    from argsupport.pipeline import Pipeline, textinfile, textoutfile
+except ImportError:
+    sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
+    from argsupport.pipeline import Pipeline, textinfile, textoutfile
+
+logger = logging.getLogger(__name__)
+
+def runChanges(dat, args):
+    def wrap(t, l):
+        def proc(m):
+            res = m.expand(t) if isinstance(t, str) else t(m)
+            logger.debug("match({0},{1})={2}->{3} at {4}".format(m.start(), m.end(), m.string[m.start():m.end()], res, l))
+            return res
+        return proc
+    for c in args.changeactions:
+        try:
+            dat = c[0].sub(wrap(c[1], c[2]), dat)
+        except TypeError as e:
+            raise TypeError(str(e) + "\n at "+c[3])
+        except regex._regex_core.error as e:
+            pass
+    return dat
+
+def readChanges(fname):
+    changes = []
+    if not os.path.exists(fname):
+        return []
+    qreg = r'(?:"((?:[^"\\]|\\.)*?)"|' + r"'((?:[^'\\]|\\.)*?)')"
+    with open(fname, encoding="utf-8") as inf:
+        alllines = list(inf.readlines())
+        i = 0
+        while i < len(alllines):
+            l = alllines[i].strip().replace(u"\uFEFF", "")
+            i += 1
+            while l.endswith("\\") and i < len(alllines):
+                l = l[:-1] + alllines[i].strip()
+                i += 1
+            l = regex.sub(r"\s*#.*$", "", l)
+            if not len(l):
+                continue
+            contexts = []
+            atcontexts = []
+            m = regex.match(r"^\s*include\s+(['\"])(.*?)\1", l)
+            if m:
+                changes.extend(readChanges(os.path.join(os.path.dirname(fname), m.group(2))))
+                continue
+            m = regex.match(r"^"+qreg+r"\s*>\s*"+qreg, l)
+            if m:
+                try:
+                    r = regex.compile(m.group(1) or m.group(2), flags=regex.M)
+                    # t = regex.template(m.group(3) or m.group(4) or "")
+                except (re.error, regex._regex_core.error) as e:
+                    print("Regular expression error: {} in changes file at line {}".format(str(e), i+1))
+                    continue
+                    changes.append((r, m.group(3) or m.group(4) or "", f"{fname} line {i+1}"))
+                continue
+            elif len(l):
+                logger.warning(f"Faulty change line found in {fname} at line {i}:\n{l}")
+    return changes
+
+@Gooey(program_name="runregchanges", use_cmd_args=True)
+def main(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("infiles",nargs="+",help="Input file")
+    parser.add_argument("-c","--changes",required=True,help="changes.txt")
+    parser.add_argument("-o","--outfile",help="Output file")
+    parser.add_argument('-l','--logging',help="Logging level [DEBUG, INFO, WARN, ERROR, number]")
+    parser.add_argument('--logfile',default='runregchanges.log',help='Set logging file')
+    args = parser.parse_args(argv)
+
+    changes = readChanges(args.changes)
+    args.changeactions = changes
+    Pipeline(args.infiles, args.outfile, args, textinfile, runChanges, textoutfile,
+            logging=True, defaultext="_changed")
+
+if __name__ == "__main__":
+    main()
