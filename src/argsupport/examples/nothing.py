@@ -1,6 +1,5 @@
 import argsupport
 from argsupport.pipeline import Pipeline, textinfile, textoutfile
-from gooey import Gooey
 
 def process(txt, args):
     return txt
