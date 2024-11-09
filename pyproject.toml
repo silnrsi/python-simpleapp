@@ -50,5 +50,13 @@ where = ["src"]
 [tool.bdist_wheel]
 universal = true
 
+[tool.setuptools.package-data]
+argsupport = ["gooey/languages/*.json", "gooey/images/*.png", "gooey/images/program_icon.*"]
+
 [project.scripts]
 createargsupport = "argsupport.project:main"
+runregchanges = "argsupport.examples.runregchanges:main"
+
+[project.entry-points.pyinstaller40]
+hook-dirs = "argsupport.__pyinstaller:get_hook_dirs"
+
