@@ -34,7 +34,7 @@ def process(txt, args):
     return txt
 
 def main(argv=None):
-    parser = argsupport.ArgumentParser()
+    parser = argsupport.ArgumentParser(prog="{name}")
     parser.add_argument("infiles",nargs="+",help="Input file")
     parser.add_argument("-o","--outfile",help="Output file")
     parser.add_argument('-l','--logging',help="Logging level [DEBUG, INFO, WARN, ERROR, number]")

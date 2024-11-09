@@ -1,0 +1,21 @@
+import argsupport
+from argsupport.pipeline import Pipeline, textinfile, textoutfile
+from gooey import Gooey
+
+def process(txt, args):
+    return txt
+
+def main(argv=None):
+    parser = argsupport.ArgumentParser(prog="nothing")
+    parser.add_argument("infiles",nargs="+",help="Input file")
+    parser.add_argument("-o","--outfile",help="Output file")
+    parser.add_argument('-l','--logging',help="Logging level [DEBUG, INFO, WARN, ERROR, number]")
+    parser.add_argument('--logfile',default='nothing.log',help='Set logging file')
+    args = parser.parse_args(argv)
+
+    Pipeline(args.infiles, args.outfile, args, textinfile, process, textoutfile,
+            logging=True, defaultext="_output")
+
+if __name__ == "__main__":
+    main()
+
