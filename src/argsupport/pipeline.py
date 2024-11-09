@@ -56,14 +56,22 @@ class Pipeline:
             pool.close()
             pool.join()
 
+    def _calcoutput(self, inf, single=False):
+        self.outfile is None and 'defaultext' not in self.kw:
+            return None
+        if single:
+            if self.outfile is not None:
+                return self.outfile
+        elif self.outfile is not None:
+            return os.path.join(self.outfile, os.path.basename(inf))
+        return inf + kw['defaultext']
+
     def _procfile(self, inf, single=False):
             currval = inf
             final = -1
-            outf = self.outfile
-            if self.outfile is None:
+            outf = self._calcoutput(inf, single=single)
+            if outf is None:
                 final = len(fns)
-            elif os.path.isdir(self.outfile):
-                outf = os.path.join(self.outfile, inf)
                 
             for fn in fns[:final]:
                 currval = fn(currval, self.args)

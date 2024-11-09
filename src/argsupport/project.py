@@ -42,14 +42,25 @@ def main(argv=None):
     parser.add_argument('--logfile',default='{name}.log',help='Set logging file')
     args = parser.parse_args(argv)
 
-    Pipeline(args.infiles, args.outfile, args, textinfile, process, textoutfile)
+    Pipeline(args.infiles, args.outfile, args, textinfile, process, textoutfile,
+            logging=True, defaultext="_output")
 
 if __name__ == "__main__":
     main()
 """
-
     mpath = os.path.join("src", os.path.dirname(modulepath))
     os.makedirs(mpath, exist_ok=True)
-    with open(os.path.join("src", modulepath), "w", encoding="utf-8") as outf:
+    with open(os.path.join("src", modulepath+ + ".py"), "w", encoding="utf-8") as outf:
         outf.write(template)
+    with open(os.path.join(mpath, "__init__.py"), "w") as outf:
+        pass
 
+def main(argv=None):
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("name",help="Project name")
+    parser.add_argument("module",help="path to module to create from src/")
+    args = parser.parse_args(argv)
+
+    create_module(args.name, args.module)
+    create_pyproject(args.name, args.module)
