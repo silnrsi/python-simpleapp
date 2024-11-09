@@ -57,7 +57,7 @@ class Pipeline:
             pool.join()
 
     def _calcoutput(self, inf, single=False):
-        self.outfile is None and 'defaultext' not in self.kw:
+        if self.outfile is None and 'defaultext' not in self.kw:
             return None
         if single:
             if self.outfile is not None:
