@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-import os, argparse, regex, sys
+import os, regex, sys
 import logging
-from gooey import Gooey
+import argsupport
 
 try:
     from argsupport.pipeline import Pipeline, textinfile, textoutfile
@@ -100,9 +100,8 @@ def readChanges(fname):
                 logger.warning(f"Faulty change line found in {fname} at line {i}:\n{l}")
     return changes
 
-@Gooey(program_name="runregchanges", use_cmd_args=True)
 def main(argv=None):
-    parser = argparse.ArgumentParser()
+    parser = argsupport.ArgumentParser(prog='runregchanges')
     parser.add_argument("infiles",nargs="+",help="Input file")
     parser.add_argument("-c","--changes",required=True,help="changes.txt")
     parser.add_argument("-o","--outfile",help="Output file")

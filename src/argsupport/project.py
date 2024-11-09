@@ -26,16 +26,15 @@ def create_pyproject(name, modulepath, **kw):
 
 def create_module(name, modulepath, **kw):
     template = f"""
-import argparse
+import argsupport
 from argsupport.pipeline import Pipeline, textinfile, textoutfile
 from gooey import Gooey
 
 def process(txt, args):
     return txt
 
-@Gooey(program_name="{name}", use_cmd_args=True)
 def main(argv=None):
-    parser = argparse.ArgumentParser()
+    parser = argsupport.ArgumentParser()
     parser.add_argument("infiles",nargs="+",help="Input file")
     parser.add_argument("-o","--outfile",help="Output file")
     parser.add_argument('-l','--logging',help="Logging level [DEBUG, INFO, WARN, ERROR, number]")
