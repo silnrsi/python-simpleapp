@@ -83,7 +83,7 @@ class Pipeline:
                 self.fns[-1](currval, outf, self.args)
 
     def setup_logging(self, logging, args):
-        if args.logging:
+        if getattr(args, 'logging', 0):
             try:
                 loglevel = int(args.logging)
             except ValueError:
