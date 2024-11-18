@@ -16,9 +16,11 @@ gooeyargs_parms = """gooey_options widget""".split()
 class ArgumentParser:
 
     def __init__(self, **kw):
+        self.__dict__['multiin'] = None
         defaults = {
             'use_cmd_args': True,
             'show_success_modal': False,
+            'show_restart_button': False,
             'language_dir': getResourcePath('languages'),
             'image_dir': '::gooey/default',
             #'timing_options': {'show_time_remaining': False}
@@ -66,7 +68,42 @@ class ArgumentParser:
                 res[a.dest] = a.default
         return argparse.Namespace(**res) if namespace is None else namespace(**res)
 
+    def _get_dest(self, args, kw):
+        res = kw.get('dest', None)
+        if res is not None:
+            return res
+        for a in args:
+            if a[0] == "-":
+                if len(a) > 1 and a[1] == "-":
+                    res = a[2:]
+                    break
+                else:
+                    res = a[1:]
+            else:       # not optional
+                res = a
+                break
+        if res is not None:
+            return res.replace("-", "_")
+        return res
+
+    def _get_mult(self, args, kw):
+        if args[0][0] == "-":
+            return "append" in kw.get('action', '')
+        if 'nargs' in kw:
+            return kw['nargs'] in "+"
+
     def add_argument(self, *args, **kw):
+        dest = self._get_dest(args, kw)
+        ismult = self._get_mult(args, kw)
+        if dest == "infile" or dest == 'infiles':
+            self.__dict__['multiin'] = ismult
+            if 'widget' not in kw:
+                kw['widget'] = "MultiFileChooser" if ismult else "FileChooser"
+        elif 'widget' not in kw:
+            if dest == 'outfile':       # requires infile before outfile
+                kw['widget'] = 'DirChooser' if self.multiin else 'FileSaver'
+            elif dest == 'outdir':
+                kw['widget'] = 'DirChooser'
         for k in list(kw.keys()):
             saveme = k in argument_parms
             if self.isgooey:
@@ -77,6 +114,7 @@ class ArgumentParser:
         
         if kw.get('required', False) or kw.get('nargs', '?') in '+':
             res.metavar = (getattr(res, 'metavar', None) or res.dest) + '*'
+        return res
 
     def parse_args(self, args=None, namespace=None):
         useargs = args or sys.argv

@@ -3,7 +3,7 @@ from glob import glob
 import os, sys, logging, json, csv
 
 class Pipeline:
-    def __init__(self, infiles, outfile, args, *fns, **kw):
+    def __init__(self, args, *fns, **kw):
         ''' Process possibly multiple input files to an output file or directory with
             given command line args. The output of one fn is fed as the first parameter
             to the next fn, with args as the second parameter. The final function is
@@ -15,8 +15,12 @@ class Pipeline:
         self.args = args
         self.fns = fns
         self.kw = kw
-        self.infiles = infiles
-        self.outfile = outfile
+        infiles = kw.get('infiles', getattr(args, 'infile', getattr(args, 'infiles', None)))
+        if infiles is None:
+            self.infiles = None
+        else:
+            self.infiles = [infiles] if isinstance(infiles, str) else infiles
+        self.outfile = kw.get('outfile', getattr(args, 'outfile', getattr(args, 'outdir', None)))
         if kw.get('logging', None):
             self.setup_logging(kw['logging'], args)
         self.procargs()
@@ -38,7 +42,7 @@ class Pipeline:
                 if outname == infiles[0]:
                     raise ValueError("Can't overwrite input file")
                 elif os.path.isdir(outname):
-                    self.outfile = os.path.join(outname, infiles[0])
+                    self.outfile = os.path.join(outname, os.path.basename(infiles[0]))
                 else:
                     self.outfile = outname
 
