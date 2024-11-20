@@ -56,7 +56,7 @@ class ArgumentParser:
 
     def missing_required(self):
         for a in self._actions:
-            if a.required or (a.nargs != 0 and a.nargs in '+'):
+            if a.required or (a.nargs is not None and a.nargs != 0 and a.nargs in '+'):
                 if a.default is None:
                     return True
         return False

@@ -1,6 +1,7 @@
 
 from glob import glob
 import os, sys, logging, json, csv
+from contextlib import contextmanager
 
 class Pipeline:
     def __init__(self, args, *fns, **kw):
@@ -98,74 +99,95 @@ class Pipeline:
                 except FileNotFoundError as e:      # no write access to the log
                     print("Exception", e)
 
+@contextmanager
+def _opener(fname, *args, encoding=None):
+    if encoding is None:
+        encoding = "utf-8"
+    inout = args[0] if len(args) else "r"
+    res = None
+    try:
+        if ("r" in inout and hasattr(fname, "read")) \
+                or ("w" in inout and hasattr(fname, "write")):
+            yield fname
+        else:
+            res = open(fname, inout, encoding=encoding)
+            yield res
+    finally:
+        if res is not None:
+            res.close()
+
+
 def f_(fn, *args, **kw):
     def wrapped(*a, **k):
         nk = dict(list(k.items()) + list(kw.items()))
-        return fn(*[a + args], **nk)
+        return fn(*(a + args), **nk)
     return wrapped
 
 def textinfile(fname, args, encoding=None):
-    if encoding is None:
-        encoding = "utf-8"
-    with open(fname, encoding=encoding) as inf:
+    with _opener(fname, encoding=encoding) as inf:
         res = inf.read()
     return res
 
 def textoutfile(txt, fname, args, encoding=None):
-    if encoding is None:
-        encoding = "utf-8"
-    with open(fname, "w", encoding=encoding) as outf:
+    with _opener(fname, "w", encoding=encoding) as outf:
         outf.write(txt)
 
 def jsoninfile(fname, args, encoding=None):
-    if encoding is None:
-        encoding = "utf-8"
-    with open(fname, encoding=encoding) as inf:
+    with _opener(fname, encoding=encoding) as inf:
         res = json.load(inf)
     return res
     
 def jsonoutfile(dat, fname, args, encoding=None, indent=-1, sort_keys=False):
     ''' outputs the data as a json file '''
-    if encoding is None:
-        encoding = "utf-8"
-    with open(fname, "w", encoding=encoding) as outf:
+    with _opener(fname, "w", encoding=encoding) as outf:
         json.dump(dat, outf, ensure_ascii=False, indent=indent, sort_keys=sort_keys)
 
 def csvinfile(fname, args, encoding=None):
-    if encoding is None:
-        encoding = "utf-8"
-    with open(fname, encoding=encoding) as inf:
+    with _opener(fname, encoding=encoding) as inf:
         reader = csv.reader(inf)
         data = [row for row in reader]
     return data
 
 def csvinfiledict(fname, args, encoding=None, fields=None):
-    if encoding is None:
-        encoding = "utf-8"
     fieldnames = None
     if fields is not None and len(fields):
         fieldnames = fields
-    with open(fname, encoding=encoding) as inf:
+    with _opener(fname, encoding=encoding) as inf:
         reader = csv.DictReader(inf, fieldnames)
         data = [row for row in reader]
         if fields is not None:
             fields[:] = reader.fieldnames
     return data
 
-def csvoutfile(dat, fname, args, encoding=None, fields=None, noheader=False):
-    if encoding is None:
-        encoding = "utf-8"
+def csvoutfile(dat, fname, args, encoding=None, fields=None, noheader=False, sortby=None):
     if not len(dat):
         return None
-    with open(fname, "w", encoding=encoding) as outf:
+    settings = {}
+    if fname.lower().endswith(".tsv"):
+        settings = dict(delimiter="\t", lineterminator="\n")
+    if sortby is not None:
+        if sortby is True:
+            data.sort()
+        else:
+            dat.sort(key=sortby)
+    with _opener(fname, "w", encoding=encoding) as outf:
         if hasattr(dat[0], 'items'):
-            writer = csv.DictWriter(outf, fields)
+            writer = csv.DictWriter(outf, fields, **settings)
             if not noheader:
                 writer.writeheader()
+            for r in dat:
+                outr = {k:r[k] for k in fields}
+                writer.writerow(outr)
         else:
-            writer = csv.writer(outf)
-        writer.writerows(dat)
+            writer = csv.writer(outf, **settings)
+            writer.writerows(dat)
     return None
 
+def usfminfile(fname, args, informat=None, gramfile=None):
+    from usfmtc import readFile
+    return readFile(fname, informat=informat, gramfile=gramfile)
 
+def usfmoutfile(dat, fname, args, outformat=None, gramfile=None, addesids=False, version=None):
+    dat.saveAs(fname, outformat=outformat, gramfile=gramfile, addesids=addesids, version=version)
+    return None
 

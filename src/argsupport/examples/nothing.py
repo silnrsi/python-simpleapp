@@ -12,8 +12,7 @@ def main(argv=None):
     parser.add_argument('--logfile',default='nothing.log',help='Set logging file')
     args = parser.parse_args(argv)
 
-    Pipeline(args.infiles, args.outfile, args, textinfile, process, textoutfile,
-            logging=True, defaultext="_output")
+    Pipeline(args, textinfile, process, textoutfile, logging=True, defaultext="_output")
 
 if __name__ == "__main__":
     main()
