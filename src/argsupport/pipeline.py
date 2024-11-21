@@ -163,7 +163,7 @@ def csvoutfile(dat, fname, args, encoding=None, fields=None, noheader=False, sor
     if not len(dat):
         return None
     settings = {}
-    if fname.lower().endswith(".tsv"):
+    if isinstance(fname, str) and fname.lower().endswith(".tsv"):
         settings = dict(delimiter="\t", lineterminator="\n")
     if sortby is not None:
         if sortby is True:
