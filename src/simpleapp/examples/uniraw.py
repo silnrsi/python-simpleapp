@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import argsupport, codecs
-from argsupport.pipeline import Pipeline, textinfile, textoutfile
+import simpleapp, codecs
+from simpleapp.pipeline import Pipeline, textinfile, textoutfile
 
 def process(txt, args):
     if args.reverse:
@@ -11,7 +11,7 @@ def process(txt, args):
     return res
 
 def main(argv=None):
-    parser = argsupport.ArgumentParser(prog="uniraw")
+    parser = simpleapp.ArgumentParser(prog="uniraw")
     parser.add_argument("infiles",nargs="+",help="Input file")
     parser.add_argument("-o","--outfile",help="Output file")
     parser.add_argument("-r","--reverse",action="store_true",help="Expand out Unicode chars")

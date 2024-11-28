@@ -1,5 +1,5 @@
 import os
-from argsupport.toml import totoml
+from simpleapp.toml import totoml
 
 def create_pyproject(name, modulepath, **kw):
     res = {}
@@ -26,18 +26,16 @@ def create_pyproject(name, modulepath, **kw):
 
 def create_module(name, modulepath, **kw):
     template = f"""
-import argsupport
-from argsupport.pipeline import Pipeline, textinfile, textoutfile
+import simpleapp
+from simpleapp.pipeline import Pipeline, textinfile, textoutfile
 
 def process(txt, args):
     return txt
 
 def main(argv=None):
-    parser = argsupport.ArgumentParser(prog="{name}")
+    parser = simpleapp.ArgumentParser(prog="{name}")
     parser.add_argument("infiles",nargs="+",help="Input file")
     parser.add_argument("-o","--outfile",help="Output file")
-    parser.add_argument('-l','--logging',help="Logging level [DEBUG, INFO, WARN, ERROR, number]")
-    parser.add_argument('--logfile',default='{name}.log',help='Set logging file')
     args = parser.parse_args(argv)
 
     Pipeline(args.infiles, args.outfile, args, textinfile, process, textoutfile,

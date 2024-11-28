@@ -1,6 +1,6 @@
-# argsupport
+# simpleapp
 
-argsupport is a python module designed to make it easy to create simple
+simpleapp is a python module designed to make it easy to create simple
 applications for sharing with colleagues who may not have python installed, etc.
 The initial application area targetted is text processing and conversion. The
 aim is to enable a relatively weak python programmer (who may only use python
@@ -10,15 +10,15 @@ into a full blow application.
 
 The module uses the gooey module to provide a GUI for the command line options.
 
-The two main areas where argsupport helps is in providing a more sophisticated
+The two main areas where simpleapp helps is in providing a more sophisticated
 drop in replacement for argparse (sitting between argparse and gooey) and a
 pipeline function that can process data in a pipeline.
 
 Here is a motivating example:
 
 ```
-import argsupport, codecs
-from argsupport.pipeline import Pipeline, textinfile, textoutfile
+import simpleapp, codecs
+from simpleapp.pipeline import Pipeline, textinfile, textoutfile
 
 def process(txt, args):
     if args.reverse:
@@ -28,7 +28,7 @@ def process(txt, args):
     return res
 
 def main(argv=None):
-    parser = argsupport.ArgumentParser(prog="uniraw")
+    parser = simpleapp.ArgumentParser(prog="uniraw")
     parser.add_argument("infiles",nargs="+",help="Input file")
     parser.add_argument("-o","--outfile",help="Output file")
     parser.add_argument("-r","--reverse",action="store_true",help="Expand out Unicode chars")

@@ -3,7 +3,7 @@ requires = ["setuptools>=62.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "argsupport"
+name = "simpleapp"
 version = "0.1"
 # (also manually bump version in src/feaxlib/__init__.py)
 authors = [{name = "Martin Hosken", email = "fonts@sil.org"}]
@@ -30,7 +30,7 @@ git = [
 ]
 
 [project.urls]
-Home-Page = "https://github.com/silnrsi/python-argsupport"
+Home-Page = "https://github.com/silnrsi/python-simpleapp"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -44,13 +44,10 @@ where = ["src"]
 [tool.bdist_wheel]
 universal = true
 
-[tool.setuptools.package-data]
-argsupport = ["gooey/languages/*.json", "gooey/images/*.png", "gooey/images/program_icon.*"]
-
 [project.scripts]
-createargsupport = "argsupport.project:main"
-runregchanges = "argsupport.examples.runregchanges:main"
+createsimpleapp = "simpleapp.project:main"
+runregchanges = "simpleapp.examples.runregchanges:main"
 
 [project.entry-points.pyinstaller40]
-hook-dirs = "argsupport.__pyinstaller:get_hook_dirs"
+hook-dirs = "simpleapp.__pyinstaller:get_hook_dirs"
 

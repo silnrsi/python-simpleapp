@@ -2,13 +2,13 @@
 
 import os, regex, sys
 import logging
-import argsupport
+import simpleapp
 
 try:
-    from argsupport.pipeline import Pipeline, textinfile, textoutfile
+    from simpleapp.pipeline import Pipeline, textinfile, textoutfile
 except ImportError:
     sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
-    from argsupport.pipeline import Pipeline, textinfile, textoutfile
+    from simpleapp.pipeline import Pipeline, textinfile, textoutfile
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ def readChanges(fname):
     return changes
 
 def main(argv=None):
-    parser = argsupport.ArgumentParser(prog='runregchanges')
+    parser = simpleapp.ArgumentParser(prog='runregchanges')
     parser.add_argument("infiles",nargs="+",help="Input file")
     parser.add_argument("-c","--changes",required=True,help="changes.txt")
     parser.add_argument("-o","--outfile",help="Output file")
