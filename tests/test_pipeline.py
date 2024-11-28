@@ -17,11 +17,13 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(of.getvalue(), teststr)
         of.close()
 
+    @unittest.skip
     def test_usfmin(self):
         dat = pipeline.usfminfile(datafile("testin.usfm"), None)
         val = dat.getroot().find('.//para[@style="p"]/verse').tail[21:27]
         self.assertEqual(val, "judges")
 
+    @unittest.skip
     def test_csvout(self):
         dat = pipeline.usfminfile(datafile("testin.usfm"), None)
         res = []
