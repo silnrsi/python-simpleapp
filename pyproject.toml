@@ -15,13 +15,12 @@ classifiers = [
    "Programming Language :: Python :: 3.8",
    "Intended Audience :: Developers",
    "License :: OSI Approved :: MIT License",
-   "Topic :: Programming :: Python"
+   "Topic :: Software Development :: Libraries :: Application Frameworks"
    ]
 requires-python = ">=3.8"
 #dynamic = ["version"]
 
 dependencies = [
-# gooey dependencies
 "gooey == 1.0.8.1",
 ]
 
