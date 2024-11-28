@@ -183,11 +183,3 @@ def csvoutfile(dat, fname, args, encoding=None, fields=None, noheader=False, sor
             writer.writerows(dat)
     return None
 
-def usfminfile(fname, args, informat=None, gramfile=None):
-    from usfmtc import readFile
-    return readFile(fname, informat=informat, gramfile=gramfile)
-
-def usfmoutfile(dat, fname, args, outformat=None, gramfile=None, addesids=False, version=None):
-    dat.saveAs(fname, outformat=outformat, gramfile=gramfile, addesids=addesids, version=version)
-    return None
-
