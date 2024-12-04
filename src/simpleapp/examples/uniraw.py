@@ -13,11 +13,11 @@ def process(txt, args):
 def main(argv=None):
     parser = simpleapp.ArgumentParser(prog="uniraw")
     parser.add_argument("infiles",nargs="+",help="Input file")
-    parser.add_argument("-o","--outfile",help="Output file")
+    parser.add_argument("-o","--outfile",default="*_uni",help="Output file")
     parser.add_argument("-r","--reverse",action="store_true",help="Expand out Unicode chars")
     args = parser.parse_args(argv)
 
-    Pipeline(args, textinfile, process, textoutfile, defaultext="_output")
+    Pipeline(args, textinfile, process, textoutfile)
 
 if __name__ == "__main__":
     main()

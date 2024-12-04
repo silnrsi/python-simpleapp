@@ -20,61 +20,53 @@ class Pipeline:
         if infiles is None:
             self.infiles = None
         else:
-            self.infiles = [infiles] if isinstance(infiles, str) else infiles
-        self.outfile = kw.get('outfile', getattr(args, 'outfile', getattr(args, 'outdir', None)))
+            infiles = [infiles] if isinstance(infiles, str) else infiles
+            self.infiles = sum([glob(f) for f in infiles], []) if infiles is not None else None
+        self.outfile = getattr(args, 'outfile', getattr(args, 'outfiles', getattr(args, 'outdir', None)))
+        self.outfilefn = self.make_outfilefn()
         if kw.get('logging', None):
             self.setup_logging(kw['logging'], args)
         self.procargs()
 
-    def procargs(self):
-        infiles = sum([glob(f) for f in self.infiles], [])
-        if len(infiles) > 1:
-            single = False
-            # can raise FileExistsError if a file exists
-            self.outfile = self.outfile or self.kw.get("defaultext", None)
-            if self.outfile is not None:
-                os.makedirs(self.outfile, exist_ok=True)
-        else:
-            single = True
-            if not self.outfile and 'defaultext' not in self.kw:
-                self.outfile = None
+    def make_outfilefn(self):
+        if '*' in self.outfile:
+            template = self.outfile.replace("*", "{}")
+            if '.' in self.outfile:
+                def dofn(infile):
+                    return template.format(os.path.splitext(os.path.basename(infile))[0])
             else:
-                outname = self.outfile or infiles[0] + self.kw.get("defaulttext", "")
-                if outname == infiles[0]:
-                    raise ValueError("Can't overwrite input file")
-                elif os.path.isdir(outname):
-                    self.outfile = os.path.join(outname, os.path.basename(infiles[0]))
-                else:
-                    self.outfile = outname
+                def dofn(infile):
+                    bits = os.path.splitext(os.path.basename(infile))
+                    return template.format(bits[0]) + bits[1]
+        elif os.path.isdir(self.outfile):
+            def dofn(infile):
+                return os.path.join(self.outfile, os.path.basename(infile))
+        elif len(self.infiles) < 2:
+            def dofn(infile):
+                return self.outfile
+        else:
+            raise ValueError("Pipeline cannot convert multiple input files {} into a single output file {}".format(self.infiles, self.outfile))
+        return dofn
 
-        if 'multiprocessing' in self.kw:
+    def procargs(self):
+        if 'multiprocessing' in self.kw and self.infiles is not None and len(self.infiles) > 1:
             jobs = int(getattr(self.args, 'jobs', 0))
         else:
             jobs = 1
 
         if jobs == 1 or single:
-            for inf in infiles:
-                self._procfile(inf, single=single)
+            for inf in self.infiles:
+                self._procfile(inf)
         else:
             pool = Pool(processes=jobs)
             results = list(pool.map_async(self._procfile, infiles).get())
             pool.close()
             pool.join()
 
-    def _calcoutput(self, inf, single=False):
-        if self.outfile is None and 'defaultext' not in self.kw:
-            return None
-        if single:
-            if self.outfile is not None:
-                return self.outfile
-        elif self.outfile is not None:
-            return os.path.join(self.outfile, os.path.basename(inf))
-        return inf + kw['defaultext']
-
-    def _procfile(self, inf, single=False):
+    def _procfile(self, inf):
             currval = inf
             final = -1
-            outf = self._calcoutput(inf, single=single)
+            outf = None if inf is None else self.outfilefn(inf)
             if outf is None:
                 final = len(self.fns)
                 

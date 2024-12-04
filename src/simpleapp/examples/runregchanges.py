@@ -64,33 +64,33 @@ def readChanges(fname):
             while l.endswith("\\") and i < len(alllines):
                 l = l[:-1] + alllines[i].strip()
                 i += 1
-            l = re.sub(r"\s*#.*$", "", l)
+            l = regex.sub(r"\s*#.*$", "", l)
             if not len(l):
                 continue
             contexts = []
             atcontexts = []
-            m = re.match(r"^\s*include\s+(['\"])(.*?)\1", l)
+            m = regex.match(r"^\s*include\s+(['\"])(.*?)\1", l)
             if m:
                 changes.extend(readChanges(os.path.join(os.path.dirname(fname), m.group(2))))
                 continue
             # test for 1+ "in" commands
             while True:
-                m = re.match(r"^\s*in\s+"+qreg+r"\s*:\s*", l)
+                m = regex.match(r"^\s*in\s+"+qreg+r"\s*:\s*", l)
                 if not m:
                     break
                 try:
                     contexts.append(regex.compile(m.group(1) or m.group(2), flags=regex.M))
-                except re.error as e:
+                except regex.error as e:
                     print("Regular expression error: {} in changes file at line {}".format(str(e), i+1))
                     break
                 l = l[m.end():].strip()
             # capture the actual change
-            m = re.match(r"^"+qreg+r"\s*>\s*"+qreg, l)
+            m = regex.match(r"^"+qreg+r"\s*>\s*"+qreg, l)
             if m:
                 try:
                     r = regex.compile(m.group(1) or m.group(2), flags=regex.M)
                     # t = regex.template(m.group(3) or m.group(4) or "")
-                except (re.error, regex._regex_core.error) as e:
+                except (regex.error, regex._regex_core.error) as e:
                     print("Regular expression error: {} in changes file at line {}".format(str(e), i+1))
                     continue
                 context = make_contextsfn(None, *contexts) if len(contexts) else None
