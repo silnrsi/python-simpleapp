@@ -1,5 +1,5 @@
 import unittest, os, io
-from argsupport import pipeline
+from simpleapp import pipeline
 
 def datafile(s):
     return os.path.join(os.path.dirname(__file__), s)

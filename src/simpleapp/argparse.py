@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, sys, os
+import argparse, sys, os, logging
 from gooey import GooeyParser
 from gooey.python_bindings.gooey_decorator import defaults as gooey_defaults
 from gooey.python_bindings import config_generator, cmd_args
@@ -12,6 +12,9 @@ argparse_parms = """prog usage description epilog parents formatter_class
 argument_parms = """action dest nargs conts default type choices required help metavar""".split()
 gooeyargs_parms = """gooey_options widget""".split()
 
+# todo  capture exceptions
+#       support input= output=
+#       support logging
 
 class ArgumentParser:
 
@@ -37,20 +40,59 @@ class ArgumentParser:
         if self.isgooey and 'prog' in kw and 'program_name' not in kw:
             self.kwargs['program_name'] = kw['prog']
         elif 'program_name' not in kw:
-            self.kwargs['program_name'] = os.path.basename(sys.argv[0].replace('.py', ''))
+            self.kwargs['program_name'] = os.path.splitext(os.path.basename(sys.argv[0]))[0]
         self.kwargs['show_preview_warning'] = False
         for k in list(kw.keys()):
             if k not in argparse_parms:
                 del kw[k]
         self.__dict__['base'] = base(**kw)
+        if self.kwargs.get('logging', None) is not None:
+            self.add_logging()
+        #if (inmode := self.kwargs.get('input', None)) is not None:
+        #    if inmode == "single":
+        #        self.base.add_argument("infile",help="Input file")
+        #    elif inmode == "multiple":
+        #        self.base.add_argument("infiles",nargs="+",help="Input files")
+        #if (outmode != self.kwargs.get('output', None)) is not None:
+        #    self.base.add_argument("-o","--outfile",default=self.kwargs['output'],help="Output file template")
+
+    def add_logging(self):
+        group = self.base.add_argument_group("Logging")
+        group.add_argument("--loglevel",help="Set logging level (DEBUG,INFO,WARN,ERROR,number)")
+        group.add_argument("--logfile",default=self.kwargs['logging'],help="File to log to")
+
+    def setup_logging(self, args):
+        logconffile = self.kwargs.get('logconfig', None)    # os.path.join(appdirs.user_config_dir("ptxprint", "SIL"), "ptxprint_logging.cfg")
+        if sys.platform == 'win32' and args.logfile == self.kwargs['logging']:
+            args.logfile = os.path.join(appdirs.user_config_dir(self.kwargs['program_name'], "simpleargs"), self.kwargs['logging'])
+        if logconffile is not None and os.path.exists(logconffile):
+            import logging.config
+            logging.config.fileConfig(logconffile)
+        elif args.loglevel:
+            try:
+                loglevel = int(args.loglevel)
+            except ValueError:
+                loglevel = getattr(logging, args.loglevel.upper(), None)
+            if isinstance(loglevel, int):
+                parms = {'level': loglevel, 'datefmt': '%d/%b/%Y %H:%M:%S', 'format': '%(asctime)s.%(msecs)03d %(levelname)s:%(module)s(%(lineno)d) %(message)s'}
+                if args.logfile.lower() != "none":
+                    logfh = open(args.logfile, "w", encoding="utf-8")
+                    parms.update(stream=logfh, filemode="w") #, encoding="utf-8")
+                try:
+                    logging.basicConfig(**parms)
+                except FileNotFoundError as e:      # no write access to the log
+                    print("Exception", e)
 
     def run_gooey(self, args=None, namespace=None):
         parser = self
         cmd_args.parse_cmd_args(parser, args)
         if not self.missing_required():
             return self.get_defaults()
-        from gooey.gui import application
+        from gooey.gui import application, events
+        from gooey.gui.pubsub import pub
         build_spec = config_generator.create_from_parser(parser, sys.argv[0], **self.kwargs)
+        pub.subscribe(events.CONSOLE_UPDATE, self.console_text)
+        self.textmode == ""
         application.run(build_spec)
         return None
 
@@ -119,9 +161,12 @@ class ArgumentParser:
     def parse_args(self, args=None, namespace=None):
         useargs = args or sys.argv
         if self.isgooey:
-            return self.run_gooey()
+            args = self.run_gooey()
         else:
-            return self.original_parse_args(args=args, namespace=namespace)
+            args = self.original_parse_args(args=args, namespace=namespace)
+        if self.kwargs.get("logging", None) is not None:
+            self.setup_logging(args)
+        return args
 
     def original_parse_args(self, args=None, namespace=None):
         return argparse.ArgumentParser.parse_args(self, args, namespace)
@@ -131,3 +176,12 @@ class ArgumentParser:
 
     def __setattr__(self, item, val):
         return setattr(self.base, item, val)
+
+    def console_text(self, **kw):
+        t = kw['msg']
+        if self.textmode == "exception":
+            if t[0] != " ":     # The actual error
+                pass
+                # raise error box
+        elif t.startswith("Traceback (most recent call last):"):
+            self.textmode = "exception"
