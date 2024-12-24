@@ -24,8 +24,6 @@ class Pipeline:
             self.infiles = sum([glob(f) for f in infiles], []) if infiles is not None else None
         self.outfile = getattr(args, 'outfile', getattr(args, 'outfiles', getattr(args, 'outdir', None)))
         self.outfilefn = self.make_outfilefn()
-        if kw.get('logging', None):
-            self.setup_logging(kw['logging'], args)
         self.procargs()
 
     def make_outfilefn(self):
@@ -74,22 +72,6 @@ class Pipeline:
                 currval = fn(currval, self.args)
             if final < 0:
                 self.fns[-1](currval, outf, self.args)
-
-    def setup_logging(self, logging, args):
-        if getattr(args, 'logging', 0):
-            try:
-                loglevel = int(args.logging)
-            except ValueError:
-                loglevel = getattr(logging, args.logging.upper(), None)
-            if isinstance(loglevel, int):
-                parms = {'level': loglevel, 'datefmt': '%d/%b/%Y %H:%M:%S', 'format': '%(asctime)s.%(msecs)03d %(levelname)s:%(module)s(%(lineno)d) %(message)s'}
-                if args.logfile.lower() != "none":
-                    logfh = open(args.logfile, "w", encoding="utf-8")
-                    parms.update(stream=logfh, filemode="w") #, encoding="utf-8")
-                try:
-                    logging.basicConfig(**parms)
-                except FileNotFoundError as e:      # no write access to the log
-                    print("Exception", e)
 
 @contextmanager
 def _opener(fname, *args, encoding=None):
