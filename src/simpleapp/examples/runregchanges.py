@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
-from simpleapp import changes
-from simpleapp.pipeline import Pipeline, textinfile, textoutfile
+from simpleapp import Changes, Pipeline, textinfile, textoutfile
 
 def main(argv=None):
     parser = simpleapp.ArgumentParser(prog='runregchanges', logging=True)
@@ -10,9 +9,8 @@ def main(argv=None):
     parser.add_argument("-o","--outfile",help="Output file")
     args = parser.parse_args(argv)
 
-    c = changes.Changes(args.changes)
-    Pipeline(args.infiles, args.outfile, args, textinfile, c.runChanges,
-             textoutfile, defaultext="_changed")
+    c = Changes(args.changes)
+    Pipeline(args, textinfile, c.runChanges, textoutfile)
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,4 @@
-import simpleapp
-from simpleapp.pipeline import Pipeline, textinfile, textoutfile
+from simpleapp import *
 
 def process(txt, args):
     return txt
@@ -10,7 +9,7 @@ def main(argv=None):
     parser.add_argument("-o","--outfile",help="Output file")
     args = parser.parse_args(argv)
 
-    Pipeline(args, textinfile, process, textoutfile, defaultext="_output")
+    Pipeline(args, textinfile, process, textoutfile)
 
 if __name__ == "__main__":
     main()

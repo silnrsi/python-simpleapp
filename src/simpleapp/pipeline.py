@@ -10,7 +10,6 @@ class Pipeline:
             to the next fn, with args as the second parameter. The final function is
             called with: data, outfile, args.
             kw may take the following options:
-                logging:          if not None, enables logging based on --logging, --logfile
                 multiprocessing:  if true processes files in parallel based on --jobs
         '''
         self.args = args
