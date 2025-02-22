@@ -92,7 +92,7 @@ class ArgumentParser:
         from gooey.gui.pubsub import pub
         build_spec = config_generator.create_from_parser(parser, sys.argv[0], **self.kwargs)
         pub.subscribe(events.CONSOLE_UPDATE, self.console_text)
-        self.textmode == ""
+        self.textmode = ""
         application.run(build_spec)
         return None
 
